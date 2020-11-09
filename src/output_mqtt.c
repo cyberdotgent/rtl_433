@@ -467,8 +467,8 @@ struct data_output *data_output_mqtt_create(struct mg_mgr *mgr, char const *host
     snprintf(client_id, sizeof(client_id), "rtl_433-%04x%04x", host_crc, devq_crc);
 
     // default base topic
-    char base_topic[8 + sizeof(mqtt->hostname)];
-    snprintf(base_topic, sizeof(base_topic), "rtl_433/%s", mqtt->hostname);
+    char base_topic[128];
+    snprintf(base_topic, sizeof(base_topic), "rf/%s", mqtt->hostname);
 
     // default topics
     char const *path_devices = "devices[/type][/model][/subtype][/channel][/id]";
@@ -495,7 +495,11 @@ struct data_output *data_output_mqtt_create(struct mg_mgr *mgr, char const *host
         // Simple key-topic mapping
         else if (!strcasecmp(key, "d") || !strcasecmp(key, "devices"))
             mqtt->devices = mqtt_topic_default(val, base_topic, path_devices);
-        // deprecated, remove this
+        // allow labelling of mqtt output
+	else if (!strcasecmp(key, "l") || !strcasecmp(key, "label")) {
+           snprintf(base_topic, sizeof(base_topic), "rf/%s", val); 
+	}
+	// deprecated, remove this
         else if (!strcasecmp(key, "c") || !strcasecmp(key, "usechannel")) {
             fprintf(stderr, "\"usechannel=...\" has been removed. Use a topic format string:\n");
             fprintf(stderr, "for \"afterid\"   use e.g. \"devices=rtl_433/[hostname]/devices[/type][/model][/subtype][/id][/channel]\"\n");
